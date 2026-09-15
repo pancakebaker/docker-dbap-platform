@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+
+# Local runtime output
+*.log
+.local/
+
+# Editor and operating-system files
+.idea/
+.vscode/
+*.user
+.DS_Store
+Thumbs.db

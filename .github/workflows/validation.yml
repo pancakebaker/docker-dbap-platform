@@ -1,0 +1,41 @@
+name: Infrastructure validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  compose-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose configuration
+        run: docker compose config
+      - name: Start infrastructure services
+        run: docker compose up -d postgres rabbitmq redis
+      - name: Wait for healthy services
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..30}; do
+            statuses="$(docker compose ps --format '{{.Service}} {{.Health}}')"
+            echo "$statuses"
+            if grep -q '^postgres healthy$' <<<"$statuses" && \
+               grep -q '^rabbitmq healthy$' <<<"$statuses" && \
+               grep -q '^redis healthy$' <<<"$statuses"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose ps
+          exit 1
+      - name: Verify PostgreSQL
+        run: docker compose exec -T postgres pg_isready -U auction_app -d auction_demo
+      - name: Verify RabbitMQ
+        run: docker compose exec -T rabbitmq rabbitmq-diagnostics -q ping
+      - name: Verify Redis
+        run: test "$(docker compose exec -T redis redis-cli ping | tr -d '\r\n')" = PONG
+      - name: Stop infrastructure services
+        if: always()
+        run: docker compose down
