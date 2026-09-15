@@ -1,5 +1,7 @@
 # DBAP Platform Infrastructure
 
+[![CI](https://github.com/pancakebaker/docker-dbap-platform/actions/workflows/validation.yml/badge.svg)](https://github.com/pancakebaker/docker-dbap-platform/actions/workflows/validation.yml)
+
 This repository owns the shared local Docker runtime for the Distributed
 Bidding Auction Platform. It provides PostgreSQL, RabbitMQ, and Redis without
 containing any application implementation.
@@ -90,6 +92,14 @@ The localized PowerShell helper is equivalent to `docker compose up -d`:
 ```powershell
 ./scripts/start-infrastructure.ps1
 ```
+
+## Related repositories
+
+- [Laravel React Auction Web](https://github.com/pancakebaker/laravel-react-auction-web)
+- [Node.js Live Feed](https://github.com/pancakebaker/nodejs-live-feed)
+- [.NET Operations Portal](https://github.com/pancakebaker/dotnet-blazor-operations-portal)
+- [.NET Bidding Service](https://github.com/pancakebaker/dotnet-bidding-service)
+- [Historical integrated monorepo](https://github.com/pancakebaker/distributed-bidding-auction-platform)
 
 ## Application repositories
 
