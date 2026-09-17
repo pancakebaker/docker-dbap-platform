@@ -10,6 +10,84 @@ This is development/demo orchestration, not a hardened production deployment.
 Images are pinned to the platform's current major versions and credentials in
 `.env.example` are development-only placeholders.
 
+## Quick start — fresh local setup
+
+Use this path to get the local DBAP infrastructure running before starting the
+application repositories.
+
+### 1. Prerequisite
+
+Install Docker Desktop with Compose v2, or Docker Engine with the Compose
+plugin, and make sure Docker is running.
+
+### 2. Create local configuration
+
+From this repository root:
+
+```powershell
+Copy-Item .env.example .env
+docker compose config
+```
+
+The `.env.example` values are development/demo placeholders. The `.env` file is
+local and should not be committed.
+
+### 3. Start PostgreSQL, RabbitMQ, and Redis
+
+```powershell
+docker compose up -d postgres rabbitmq redis
+docker compose ps
+```
+
+Wait until all three services report `healthy`.
+
+Optional direct checks:
+
+```powershell
+docker compose exec -T postgres pg_isready -U auction_app -d auction_demo
+docker compose exec -T rabbitmq rabbitmq-diagnostics -q ping
+docker compose exec -T redis redis-cli ping
+```
+
+### 4. Start the application repositories
+
+The infrastructure stack does not run application migrations or seed
+application data. Continue with each repository's own quick-start instructions:
+
+1. [`dotnet-bidding-service`](https://github.com/pancakebaker/dotnet-bidding-service) —
+   migrate/seed the Bidding database, then start the API, Scheduler, and Outbox
+   Publisher.
+2. [`dotnet-blazor-operations-portal`](https://github.com/pancakebaker/dotnet-blazor-operations-portal) —
+   migrate the Operations database, provision its local administrator material,
+   then start the portal.
+3. [`nodejs-live-feed`](https://github.com/pancakebaker/nodejs-live-feed) —
+   start Live Feed when realtime auction updates are required.
+4. [`laravel-react-auction-web`](https://github.com/pancakebaker/laravel-react-auction-web) —
+   start the Laravel/React tenant-facing application.
+
+Clone the repositories as siblings for the documented local paths and
+cross-service key-provisioning examples.
+
+### 5. Stop or reset the infrastructure
+
+Stop containers but keep local data:
+
+```powershell
+docker compose down
+```
+
+To intentionally remove the Compose project's containers and named volumes:
+
+```powershell
+docker compose down -v
+```
+
+The reset command deletes persisted PostgreSQL, RabbitMQ, and Redis development
+data.
+
+For ports, ownership boundaries, database initialization details, and
+troubleshooting, continue with the sections below.
+
 ## Ownership
 
 The platform stack contains:
@@ -60,7 +138,7 @@ outbox transaction. Scheduler and Outbox Publisher are separate processes in
 the Bidding repository. Service-to-service URLs and application credentials
 are configured by those service repositories, not by this Compose stack.
 
-## Usage
+## Detailed local usage
 
 ### Prerequisites
 
@@ -159,18 +237,6 @@ repository:
 Do not add application migrations or demo seed data to this infrastructure
 repository.
 
-### Fresh local setup
-
-For a complete local platform starting from zero:
-
-1. Clone this repository and the application repositories as siblings.
-2. Copy `.env.example` to `.env` using the command above.
-3. Run `docker compose config`.
-4. Start `postgres`, `rabbitmq`, and `redis`.
-5. Wait for all three health checks to report `healthy`.
-6. Follow the Bidding Service README to migrate and seed its local/demo database, then start the API, Scheduler, and Outbox Publisher.
-7. Follow the Operations Portal README to migrate `auction_operations`, configure its local administrator material, and start the portal.
-8. Start Live Feed and Laravel/React using their own repository instructions when those features are required.
 
 ### Stop infrastructure
 
@@ -214,7 +280,7 @@ Stop and reset the old project from the directory and Compose file that created
 it. Do not use broad commands such as `docker system prune --volumes` as the
 normal DBAP reset procedure.
 
-The localized PowerShell helper is a startup convenience only:
+A localized PowerShell startup helper is also available:
 
 ```powershell
 .\scripts\start-infrastructure.ps1
